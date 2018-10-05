@@ -58,7 +58,32 @@ def read_file_init_table(fname):
         idx_line = idx_line+1       
     return tag_count, word_tag, tag_trans
 
-tag_count, word_tag, tag_trans = read_file_init_table('sample_postagged_2.txt')
+tag_count, word_tag, tag_trans = read_file_init_table('data_train.txt')
+
+def read_test_file(filename):
+    
+    with open(filename) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+    
+    Sentences = []
+    
+    idx_line = 0
+    kalimat = []
+    while idx_line < len(content):
+        while not content[idx_line].startswith('</kalimat'):
+            if  content[idx_line].startswith('<kalimat'):
+                kalimat = []
+            if  not content[idx_line].startswith('<kalimat'):
+                content_part = content[idx_line].split('\t')
+                kalimat.append(content_part)
+            idx_line = idx_line + 1
+        Sentences.append(kalimat)
+            
+        idx_line = idx_line+1
+    
+    return Sentences
+
 # print(tag_count)
 # print(word_tag)
 # print(tag_trans)
@@ -85,8 +110,19 @@ def create_emission_prob_table(word_tag, tag_count):
     emission_prob = {}
     for word_tag_entry in word_tag.keys():
         word_tag_split = word_tag_entry.split(',')
-        current_word = word_tag_split[0]
-        current_tag = word_tag_split[1]
+        print('\n---')
+        print(word_tag_split)
+        if (word_tag_split[0] == ','):
+            current_word = ''.join(word_tag_split[:-1])
+            current_tag = word_tag_split[-1]
+        if (len(word_tag_split) > 2):
+            current_word = ''.join(word_tag_split[:-1])
+            current_tag = word_tag_split[-1]
+        else:
+            current_word = word_tag_split[0]
+            current_tag = word_tag_split[1]
+        print(current_word)
+        print(current_tag)
         emission_key = current_word+','+current_tag
         emission_prob[emission_key] = word_tag[word_tag_entry]/tag_count[current_tag]
     return emission_prob
@@ -98,8 +134,12 @@ def viterbi(trans_prob, emission_prob, tag_count, sentence):
     #initialization
     viterbi_mat = {}
     tag_sequence = []
-
-    sentence_words = sentence.split()
+    
+    # print(sentence)
+    
+    sentence_words = ['<start>'] + [x[0].lower() for x in sentence]
+    print(sentence_words)
+    expected_tag = [x[1] for x in sentence]
     
     current_tag = '<start>'
     max_score = 1
@@ -111,31 +151,48 @@ def viterbi(trans_prob, emission_prob, tag_count, sentence):
         
         for j, trans in enumerate(emission_prob.keys()):
 #             print(trans)
-            print(current_tag)
+            # print(current_tag)
             score = 0
             next_word = trans.split(',')[0]
             next_tag = trans.split(',')[1]
             
             if (next_word == sentence_words[i+1]):
-                print(current_word, ' ', next_word, ' ', current_tag, ' ', next_tag)
+                # print(current_word, ' ', next_word, ' ', current_tag, ' ', next_tag)
                 try:    
-                    print('TP: ', trans_prob[current_tag + ',' + next_tag])
+                    # print('TP: ', trans_prob[current_tag + ',' + next_tag])
                     score = max_score * emission_prob[trans] * trans_prob[current_tag + ',' + next_tag]
                 except:
-                    print('TP: ', 0)
+                    # print('TP: ', 0)
                     score = max_score * emission_prob[trans] * 0
             scores.append({ 'score': score, 'current_tag': current_tag, 'tag': next_tag })
         
         onlyScores = [x['score'] for x in scores]
-        print(onlyScores)
+        # print(onlyScores)
         max_index = onlyScores.index(max(onlyScores))
         
         max_score = max(onlyScores)
         current_tag = scores[max_index]['tag']
         tag_sequence.append(current_tag)
     
-    return viterbi_mat, tag_sequence
+    return viterbi_mat, tag_sequence, expected_tag
 
-sentence = "<start> dia ingin makan ikan kemaren"
-result_viterbi = viterbi(trans_prob, emission_prob, tag_count, sentence)
-print(result_viterbi)
+# sentence = "<start> dia ingin makan ikan kemaren"
+Test_Sentences = read_test_file('data_test.txt')
+
+Scores = numpy.zeros(20)
+Accuracy = 0
+
+for i, sentence in enumerate(Test_Sentences):
+    # print(i)
+    viterbi_mat, tagPrediction, tagExpectation = viterbi(trans_prob, emission_prob, tag_count, sentence)
+    
+    for j, tag in enumerate(tagPrediction):
+        if (tag == tagExpectation[j]):
+            Scores[i] += 1
+    Scores[i] /= len(sentence)
+    
+    # print(viterbi_mat)
+    # print(tagPrediction)
+    # print(tagExpectation)
+Accuracy = sum(Scores) / 20
+print('ACCURACY: ', Accuracy)

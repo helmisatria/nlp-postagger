@@ -6,6 +6,8 @@ Created on Fri Oct  5 11:21:16 2018
 @author: helmisatria
 """
 
+import numpy as np
+
 def read_file_init_table(fname):
     tag_count = {}
     tag_count['<start>'] = 0
@@ -54,10 +56,35 @@ def read_file_init_table(fname):
         idx_line = idx_line+1
     return tag_count, word_tag, tag_trans
 
-tag_count, word_tag, tag_trans = read_file_init_table('sample_postagged.txt')
+tag_count, word_tag, tag_trans = read_file_init_table('data_train.txt')
+
+def read_test_file(filename):
+    
+    with open(filename) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+    
+    Sentences = []
+    
+    idx_line = 0
+    kalimat = []
+    while idx_line < len(content):
+        while not content[idx_line].startswith('</kalimat'):
+            if  content[idx_line].startswith('<kalimat'):
+                kalimat = []
+            if  not content[idx_line].startswith('<kalimat'):
+                content_part = content[idx_line].split('\t')
+                kalimat.append(content_part)
+            idx_line = idx_line + 1
+        Sentences.append(kalimat)
+            
+        idx_line = idx_line+1
+    
+    return Sentences
 
 def baseline(word_tag, sentence):
-    s = sentence.split()
+    s = [x[0] for x in sentence]
+    expected_tag = [x[1] for x in sentence]
     tag_sequence = []
     
     for i, word in enumerate(s):
@@ -77,11 +104,21 @@ def baseline(word_tag, sentence):
             best_tag = scores[max_index]['tag']
             tag_sequence.append(best_tag)
         except:
-            tag_sequence.append('<unknown>')            
-        print(scores)
+            tag_sequence.append('NN')
         
-    return tag_sequence
+    return tag_sequence, expected_tag
 
-sentence = 'kera untuk amankan pesta olahraga'
-tagSequence = baseline(word_tag, sentence)
-print(tagSequence)
+Test_Sentences = read_test_file('data_test.txt')
+
+Score = np.zeros(20)
+Accuracy = 0
+for i, sentence in enumerate(Test_Sentences):
+    
+    tagPredicted, tagExpected = baseline(word_tag, sentence)
+    
+    for j, tag in enumerate(tagPredicted):
+        if (tag == tagExpected[j]):
+            Score[i] += 1
+    Score[i] /= len(sentence)
+
+Accuracy = sum(Score)/20

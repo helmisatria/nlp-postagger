@@ -26,6 +26,30 @@ def read_dataset(fname):
         idx_line = idx_line+2        
     return sentences, tags
 
+def read_test_file(filename):
+    
+    with open(filename) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+    
+    Sentences = []
+    
+    idx_line = 0
+    kalimat = []
+    while idx_line < len(content):
+        while not content[idx_line].startswith('</kalimat'):
+            if  content[idx_line].startswith('<kalimat'):
+                kalimat = []
+            if  not content[idx_line].startswith('<kalimat'):
+                content_part = content[idx_line].split('\t')
+                kalimat.append(content_part)
+            idx_line = idx_line + 1
+        Sentences.append(kalimat)
+            
+        idx_line = idx_line+1
+    
+    return Sentences
+
 def features(sentence, index):
     """ sentence: [w1, w2, ...], index: the index of the word """
     return {
@@ -54,16 +78,23 @@ def transform_to_dataset(sentences, tags):
  
 
  
-sentences,tags = read_dataset('sample_postagged.txt')
-print(sentences[0])
-print(tags[0])
+sentences,tags = read_dataset('data_train.txt')
+
+test_sentences = read_test_file('data_test.txt')
+Test_Sentences = []
+Test_Tags = []
+for i, s in enumerate(test_sentences):
+    Test_Sentences.append([x[0].lower() for x in s])
+    Test_Tags.append([x[1] for x in s])
+# print(sentences[0])
+# print(tags[0])
 
 # Split the dataset for training and testing
-cutoff = int(.75 * len(sentences))
-training_sentences = sentences[:cutoff]
-test_sentences = sentences[cutoff:]
-training_tags = tags[:cutoff]
-test_tags = tags[cutoff:]
+# cutoff = int(.75 * len(sentences))
+training_sentences = sentences
+test_sentences = Test_Sentences
+training_tags = tags
+test_tags = Test_Tags
  
 #print(len(training_sentences))   
 #print(len(test_sentences))         
