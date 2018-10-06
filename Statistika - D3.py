@@ -1,6 +1,10 @@
-# Contoh POSTagger sederhana dengan pendekatan statistika (metode decision tree)
-# Ade Romadhony - Fakultas Informatika Universitas Telkom
-# sumber: https://nlpforhackers.io/training-pos-tagger/
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 27 09:51:28 2018
+
+@author: helmisatria
+"""
 
 def read_dataset(fname):
     sentences = []
@@ -13,8 +17,8 @@ def read_dataset(fname):
     while idx_line < len(content):
         sent = []
         tag = []
-        print('idx_line =')
-        print(idx_line)
+        # print('idx_line =')
+        # print(idx_line)
         while not content[idx_line].startswith('</kalimat'):
             if  not content[idx_line].startswith('<kalimat'):
                 content_part = content[idx_line].split('\t')
@@ -76,8 +80,6 @@ def transform_to_dataset(sentences, tags):
  
     return X, y
  
-
- 
 sentences,tags = read_dataset('data_train.txt')
 
 test_sentences = read_test_file('data_test.txt')
@@ -86,24 +88,14 @@ Test_Tags = []
 for i, s in enumerate(test_sentences):
     Test_Sentences.append([x[0].lower() for x in s])
     Test_Tags.append([x[1] for x in s])
-# print(sentences[0])
-# print(tags[0])
-
-# Split the dataset for training and testing
-# cutoff = int(.75 * len(sentences))
+    
+# Load Data test
 training_sentences = sentences
 test_sentences = Test_Sentences
 training_tags = tags
 test_tags = Test_Tags
  
-#print(len(training_sentences))   
-#print(len(test_sentences))         
-
 X, y = transform_to_dataset(training_sentences, training_tags)
-print('data training ke-0 =')
-print(X[0])
-print('label training ke-0 =')
-print(y[0])
 
 from sklearn import tree
 from sklearn.feature_extraction import DictVectorizer

@@ -58,6 +58,7 @@ def read_file_init_table(fname):
 
 tag_count, word_tag, tag_trans = read_file_init_table('data_train.txt')
 
+# Membaca test file
 def read_test_file(filename):
     
     with open(filename) as f:
@@ -82,6 +83,7 @@ def read_test_file(filename):
     
     return Sentences
 
+# Metoda baseline
 def baseline(word_tag, sentence):
     s = [x[0] for x in sentence]
     expected_tag = [x[1] for x in sentence]
@@ -110,6 +112,7 @@ def baseline(word_tag, sentence):
 
 Test_Sentences = read_test_file('data_test.txt')
 
+# Mengeksekusi metode baseline dari tiap kalimat di data test
 Score = np.zeros(20)
 Accuracy = 0
 for i, sentence in enumerate(Test_Sentences):
@@ -122,3 +125,4 @@ for i, sentence in enumerate(Test_Sentences):
     Score[i] /= len(sentence)
 
 Accuracy = sum(Score)/20
+print('Accuracy: ', Accuracy)
